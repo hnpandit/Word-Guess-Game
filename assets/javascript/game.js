@@ -7,11 +7,18 @@ var txtWord = document.getElementById('user-text');
 var txtRound = document.getElementById('num-round');
 var txtGuess = document.getElementById('num-guess');
 var txtGuessed = document.getElementById('guess-text');
+var txtNumWin = document.getElementById('num-win');
+var txtHint = document.getElementById('hint');
+var txtDetails = document.getElementById('details');
+
+const maxRounds = 5;
+const maxGuess = 10;
 
 var numRound = 0;
-var numGuess = 10;
+var numWin = 0;
+var numGuess = maxGuess;
+var numMatchFound = 0;
 var gameOver = false;
-const maxRounds = 2;
 
 var wordGuessGame = {
     "words": [
@@ -23,23 +30,24 @@ var wordGuessGame = {
     ],
 
     "hints": [
-        "Word starts with a and we can pass to function",
-        "Word starts with b and it is one of the data types with two values",
-        "Word starts wtih f and used for loops",
-        "Word starts with r and used for coming out",
-        "Word starts with v and this is how you declare variable"
+        " This keyword starts with a and we can pass to function",
+        " This keyword starts with b and it is one of the data types with two values",
+        " This keyword starts wtih f and used for loops",
+        " This keyword starts with r and used for coming out",
+        " This keyword starts with v and this is how you declare variable"
     ],
 
     "details": [
-        "arguments",
-        "boolean",
-        "for",
-        "return",
-        "var"
+        "https://www.w3schools.com/js/js_function_parameters.asp",
+        "https://www.w3schools.com/js/js_booleans.asp",
+        "https://www.w3schools.com/js/js_loop_for.asp",
+        "https://www.w3schools.com/jsref/jsref_return.asp",
+        "https://www.w3schools.com/js/js_variables.asp"
     ],
 
-    "guesses": [
-    ],
+    "guessWord": [],
+
+    "realWord": [],
   
     startGame: function() {
         this.refreshDisplay();
@@ -61,46 +69,116 @@ var wordGuessGame = {
     },
 
     resetRound: function() {
-        numGuess = 10;
+        numMatchFound = 0;
+        numGuess = maxGuess;
         numRound = numRound + 1;
         txtWord.textContent = " ";
-        wordGuessGame.guesses.length = 0;
+        wordGuessGame.guessWord.length = 0;
         this.refreshDisplay();
     },
 
     refreshDisplay: function() {
-        txtRound.textContent = numRound + 1;
-        txtGuess.textContent = numGuess;
-        //txtWord.textContent = txtWord.textContent + key.toLowerCase();
+
+        if (numRound == maxRounds)
+        {
+            gameOver = true;
+            return;
+        }
+        txtRound.textContent = (numRound + 1) + " of " + maxRounds;
+        txtGuess.textContent = numGuess + " of " + maxGuess;
+        txtNumWin.textContent = numWin + " out of " + maxRounds;
+        txtHint.textContent = "";
         
+        
+        var strWord = "";
         for (var j=0; j < wordGuessGame.words[numRound].length; j++) 
         {
-            txtWord.textContent = txtWord.textContent + "_" + " ";
+            if (this.doesLetterExist(wordGuessGame.guessWord, wordGuessGame.words[numRound][j]))
+            {   
+                strWord =  strWord + wordGuessGame.words[numRound][j] + " ";
+            }
+            else
+            {
+                strWord =  strWord + "_" + " ";
+            }
+            txtWord.textContent = strWord;
         }
 
         var strGuesses;
-        if ( wordGuessGame.guesses.length == 0)
+        if (wordGuessGame.guessWord.length == 0)
         {
-            strGuesses = "None";
+            strGuesses = "none";
         }
         else
         {
             strGuesses = "'";
-            for (k=0; k < wordGuessGame.guesses.length; k++)
+            for (k=0; k < wordGuessGame.guessWord.length; k++)
             {
-                strGuesses = strGuesses + wordGuessGame.guesses[k].toUpperCase() + " ";
+                strGuesses = strGuesses + wordGuessGame.guessWord[k].toUpperCase() + " ";
             }
             strGuesses = strGuesses + "'";
         }
         txtGuessed.textContent = strGuesses;
         },
 
-    processUserInput: function(key) {
-        this.updateCounters();
-        this.refreshDisplay();
-        this.guesses.push(key);    
+    doesLetterExist: function(arr, key)
+    {
+        for (k=0; k < arr.length; k++)
+        {
+            if (key === arr[k])
+            {
+                return true;
+            }
+        }
+        return false;
     },
+
+    countMultiple: function(arr, key)
+    {
+        var count = 0;
+        for (k=0; k < arr.length; k++)
+        {
+            if (arr.charAt(k) === key)
+            {
+                count++;
+            }
+        }
+        return count;
+    },
+
+    processUserInput: function(key) 
+    {
+        if (this.doesLetterExist(wordGuessGame.guessWord, key))
+        {   
+            //alert("You have already guessed " + key.toUpperCase()); 
+        }
+        else    
+        {
+            this.guessWord.push(key);   
+            this.updateCounters();
+            this.refreshDisplay();
+            var count = this.countMultiple(wordGuessGame.words[numRound], key)
+            numMatchFound = numMatchFound + count;
+            if (numMatchFound == wordGuessGame.words[numRound].length)
+            {
+                var strMessage;
+                numWin++;
+                strMessage = "Congratulations. ";
+                strMessage = strMessage + "You can find more informatio about keyword "
+                strMessage = strMessage + " " + wordGuessGame.words[numRound];
+                strMessage = strMessage + " at " + wordGuessGame.details[numRound];
+                txtDetails.textContent = strMessage;
+                this.refreshDisplay();
+                this.resetRound();
+            }
+        }  
+    }
   };
+
+function hintMe()
+{
+    txtHint.textContent = wordGuessGame.hints[numRound];
+}
 
 // Start game here...
 wordGuessGame.startGame();
